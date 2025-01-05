@@ -38,8 +38,8 @@ void printResults(const std::string& testName, int capacity, int get_operations,
 void testLRUCachePerformance(int capacity) {
     const int CAPACITY = capacity;
 
-    LRUCache<int, std::string> lru(CAPACITY);
-
+    // LRUCache<int, std::string> lru(CAPACITY);
+    LRUKCache<int, std::string> lru(CAPACITY, 10 * CAPACITY, 1);
 
     std::random_device rd;
     std::mt19937 gen(rd());

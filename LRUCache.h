@@ -127,6 +127,54 @@ namespace HanCache {
             }
             return false;
         }
+
+        void remove(Key key) {
+            NodePtr node = getNode(key);
+            if (node) {
+                removeNode(node);
+                nodemap_.erase(node->key_);
+            }
+        }
     };
 
+    template<typename Key, typename Value>
+    class LRUKCache : public LRUCache<Key, Value> 
+    {
+    private:
+        int k_;
+        std::unique_ptr<LRUCache<Key, size_t>> historyList_;
+    public:
+        LRUKCache(int capacity, int historyCapacity, int k)
+            : LRUCache<Key, Value>(capacity)
+            , historyList_(std::make_unique<LRUCache<Key, size_t>>(historyCapacity))
+            , k_(k)
+        {}
+
+        Value get(Key key) {
+            int historyCounts = historyList_->get(key);
+            historyList_->put(key, ++historyCounts);
+
+            return LRUCache<Key, Value>::get(key);
+        }
+
+        bool get(Key key, Value& value) {
+            int historyCounts = historyList_->get(key);
+            historyList_->put(key, ++historyCounts);
+
+            return LRUCache<Key, Value>::get(key, value);
+        }
+
+        void put(Key key, Value value) {
+            if (LRUCache<Key, Value>::get(key) != "")
+                LRUCache<Key, Value>::put(key, value);
+            
+            int historyCounts = historyList_->get(key);
+            historyList_->put(key, ++historyCounts);
+
+            if (historyCounts >= k_) {
+                historyList_->remove(key);
+                LRUCache<Key, Value>::put(key, value);
+            }
+        }
+    };
 } // namespace HanCache
