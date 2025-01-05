@@ -39,7 +39,8 @@ void testLRUCachePerformance(int capacity) {
     const int CAPACITY = capacity;
 
     // LRUCache<int, std::string> lru(CAPACITY);
-    LRUKCache<int, std::string> lru(CAPACITY, 10 * CAPACITY, 1);
+    //LRUKCache<int, std::string> lru(CAPACITY, 10 * CAPACITY, 1);
+    HashLRUCaches<int, std::string> lru(CAPACITY, 2);
 
     std::random_device rd;
     std::mt19937 gen(rd());

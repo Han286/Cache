@@ -5,6 +5,7 @@
 #include <memory>
 #include <unordered_map>
 #include <mutex>
+#include <functional>
 #include "CachePolicy.h"
 
 namespace HanCache {
@@ -176,5 +177,47 @@ namespace HanCache {
                 LRUCache<Key, Value>::put(key, value);
             }
         }
+    };
+
+    template<typename Key, typename Value>
+    class HashLRUCaches
+    {
+    private:
+        size_t capacity_;
+        size_t sliceNum_;
+        std::vector<std::unique_ptr<LRUCache<Key, Value>>> lruCaches_;
+
+        size_t hash(Key key) {
+            std::hash<Key> hashFunc;
+            return hashFunc(key);
+        }
+    
+    public:
+        HashLRUCaches (size_t capacity, size_t sliceNum)
+            : capacity_(capacity), sliceNum_(sliceNum)
+        {
+            size_t sliceSize = std::ceil(capacity / static_cast<double>(sliceNum));
+
+            lruCaches_.resize(sliceNum);
+            
+            for (int i = 0; i < sliceNum; i++) {
+                lruCaches_[i] = std::make_unique<LRUCache<Key, Value>>(sliceSize);
+            }
+        }
+
+        void put(Key key, Value value) {
+            size_t sliceIndex = hash(key) % sliceNum_;
+            lruCaches_[sliceIndex]->put(key, value);
+        }
+
+        bool get(Key key, Value& value) {
+            size_t sliceIndex = hash(key) % sliceNum_;
+            return lruCaches_[sliceIndex]->get(key, value);
+        }
+
+        Value get(Key key) {
+            size_t sliceIndex = hash(key) % sliceNum_;
+            return lruCaches_[sliceIndex]->get(key);
+        }    
     };
 } // namespace HanCache
