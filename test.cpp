@@ -82,8 +82,8 @@ void testLRUCachePerformance(int capacity) {
 void testLFUCachePerformance(int capacity) {
     const int CAPACITY = capacity;
 
-    LFUCache<int, std::string> lfu(CAPACITY);
-
+    // LFUCache<int, std::string> lfu(CAPACITY);
+    HashLFUCaches<int, std::string> lfu(CAPACITY, 3);
 
     std::random_device rd;
     std::mt19937 gen(rd());

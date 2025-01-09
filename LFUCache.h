@@ -11,6 +11,7 @@ namespace HanCache {
     
     template<typename Key, typename Value> class LFUCache;
     template<typename Key, typename Value> class LFUCachePro;
+    template<typename Key, typename Value> class HashLFUCaches;
 
     template<typename Key, typename Value>
     class LFUNode {    
@@ -273,5 +274,44 @@ namespace HanCache {
             increaseFreqNum();
         }
     
+    };
+
+    template<typename Key, typename Value> 
+    class HashLFUCaches {
+    private:
+        size_t capacity_;
+        size_t sliceNum_;
+        std::vector<std::unique_ptr<LFUCache<Key, Value>>> lfuCaches_;
+
+        size_t hash(Key key) {
+            std::hash<Key> hashFunc;
+            return hashFunc(key);
+        }
+
+    public:
+        HashLFUCaches(size_t capacity, size_t sliceNum)
+            : capacity_(capacity), sliceNum_(sliceNum)
+        {
+            size_t sliceSize = std::ceil(capacity / static_cast<double>(sliceNum));
+            lfuCaches_.resize(sliceNum);
+            for (int i = 0; i < sliceNum; i++) {
+                lfuCaches_[i] = std::make_unique<LFUCache<Key, Value>>(sliceSize);
+            }
+        }
+
+        void put(Key key, Value value) {
+            size_t index = hash(key) % sliceNum_;
+            lfuCaches_[index]->put(key, value);
+        }
+
+        bool get(Key key, Value& value) {
+            size_t index = hash(key) % sliceNum_;
+            return lfuCaches_[index]->get(key, value);
+        }
+
+        Value get(Key key) {
+            size_t index = hash(key) % sliceNum_;
+            return lfuCaches_[index]->get(key);
+        }
     };
 } // namespace end
